@@ -1,4 +1,6 @@
 const bugImages = ["bug1.png", "bug2.png", "bug3.png", "bug4.png"];
+const messageBox = document.getElementById("message-box");
+const postRequestButton = document.getElementById("post-request");
 let gameDiv = document.getElementById("gameDiv");
 let countdownSpan = document.getElementById("countdownSpan");
 let scoreSpan = document.getElementById("scoreSpan")
@@ -6,9 +8,63 @@ let countdown = 10, score = 0;
 let startTime;
 
 function gameOver() {
-    // This is the function that gets called when the game is over.
-    // Update this to post the new score to the server.
-    window.alert("You squashed " + score + " bugs!");
+    const getRequestButton = document.getElementById("get-request");
+    const scoresURL = "http://localhost:3000/scores";
+    
+    let postdata = {
+      name: playerName,
+      score: score,
+    }
+    console.log(postdata)
+    const postRequestOptions = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(postdata),
+    }
+    
+    
+    getRequestButton.addEventListener("click", event => {
+    
+      fetch(scoresURL) // Note 1 (see below)
+        .then(response => response.json()) // Note 2
+        .then(scores => { // Note 3
+          console.log(scores);
+          // Note 4
+          const json = JSON.stringify(scores); // Note 5
+          printToMessageBox(json); // Note 6
+        })
+        .catch(error => {
+          console.log("A network error has occurred when attempting to perform the GET request:", error)
+        })
+    
+    })
+    
+    
+    postRequestButton.addEventListener("click", event => {
+    
+      fetch(scoresURL, postRequestOptions) // NOTE 1 (see below)
+        .then(response => response.json()) // NOTE 2
+        .then(topThreeScores => { // NOTE 3
+          console.log(topThreeScores);
+          const json = JSON.stringify(topThreeScores);
+          printToMessageBox(json);
+        })
+        .catch(error => {
+          console.log("A network error has occurred when attempting to perform the POST request:", error)
+        })
+    
+    })
+    
+    function printToMessageBox(json) {
+      const text = document.createTextNode(json);
+      const div = document.createElement("div");
+    
+      div.appendChild(text);
+      messageBox.innerHTML = "";
+      messageBox.appendChild(div);
+    }
 }
 
 function playGame() {
@@ -19,7 +75,6 @@ function playGame() {
         return;
     }    
     document.getElementById("startButton").style.display = "none";
-
     startTime = Date.now();
     score = 0;
     onTick();
@@ -72,7 +127,7 @@ function animate(obj) {
 function onTick() {
     let elapsed = (Date.now() - startTime)/1000;
     //console.log(elapsed);
-    countdown = 20 - Math.floor(elapsed);
+    countdown = 5 - Math.floor(elapsed);
     if(countdown >= 0) {
         countdownSpan.innerHTML = countdown;
         scoreSpan.innerHTML = score;
